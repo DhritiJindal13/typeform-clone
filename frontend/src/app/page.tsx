@@ -92,7 +92,7 @@ export default function WorkspacePage() {
         )}
 
         {forms !== null && forms.length > 0 && (
-          <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-paper">
+          <ul className="divide-y divide-line rounded-lg border border-line bg-paper">
             {forms.map((form) => (
               <FormRow
                 key={form.id}
