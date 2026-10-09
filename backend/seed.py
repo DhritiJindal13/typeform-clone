@@ -1,5 +1,3 @@
-"""Fills the database with two sample published forms and fake responses.
-Safe to run more than once: forms that already exist are skipped."""
 import random
 from datetime import timedelta
 
@@ -7,7 +5,7 @@ from database import Base, SessionLocal, engine
 from models import Answer, Form, FormStatus, Question, QuestionOption, Response, utcnow
 from routers.forms import get_default_user
 
-random.seed(7)  # same fake data every time
+random.seed(7)
 
 NAMES = [
     "Aarav", "Diya", "Kabir", "Meera", "Rohan", "Ananya", "Vikram", "Isha",
@@ -48,12 +46,13 @@ EVENT_QUESTIONS = [
      "options": ["S", "M", "L", "XL"]},
     {"type": "number", "title": "How many guests are you bringing?"},
     {"type": "yes_no", "title": "Do you need vegetarian food?"},
+    {"type": "rating", "title": "How excited are you about the event?",
+     "settings": {"max": 5}},
     {"type": "long_text", "title": "Any questions for the speakers?"},
 ]
 
 
 def fake_answer(question: Question, name: str) -> str:
-    """Makes an answer that passes the same rules as real submissions."""
     kind = question.type
     if kind == "short_text":
         return name
@@ -98,13 +97,12 @@ def create_form(db, owner, slug, title, thank_you, question_specs, response_coun
             )
         )
     db.add(form)
-    db.flush()  # gives the questions their ids
+    db.flush()
 
     for i in range(response_count):
         name = NAMES[i % len(NAMES)]
         answers = []
         for question in form.questions:
-            # Optional questions are sometimes skipped, like real people do
             if not question.required and random.random() < 0.3:
                 continue
             answers.append(Answer(question_id=question.id, value=fake_answer(question, name)))
@@ -119,13 +117,17 @@ def main():
     db = SessionLocal()
     try:
         owner = get_default_user(db)
-        create_form(db, owner, "customer-feedback", "Customer Feedback Survey",
-                    "Thank you! Your feedback helps us improve.", FEEDBACK_QUESTIONS, 18)
-        create_form(db, owner, "event-signup", "Event Registration",
-                    "You're registered! See you at the event.", EVENT_QUESTIONS, 12)
+        create_form(
+            db, owner, "customer-feedback", "Customer Feedback Survey",
+            "Thank you! Your feedback helps us improve.", FEEDBACK_QUESTIONS, 18,
+        )
+        create_form(
+            db, owner, "event-signup", "Event Registration",
+            "You're registered! See you at the event.", EVENT_QUESTIONS, 12,
+        )
         db.commit()
     except Exception:
-        db.rollback()  # if anything fails, save nothing half-done
+        db.rollback()
         raise
     finally:
         db.close()
