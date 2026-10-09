@@ -1,43 +1,35 @@
 "use client";
 
-import ThemeToggle from "@/components/ThemeToggle";
-
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, errorMessage } from "@/lib/api";
 import type { FormSummary } from "@/lib/types";
 import { useToast } from "@/components/Toast";
-import FormRow from "@/components/FormRow";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import FormRow from "@/components/FormRow";
+import ThemeToggle from "@/components/ThemeToggle";
 
-export default function DashboardPage() {
+export default function WorkspacePage() {
   const router = useRouter();
   const toast = useToast();
 
   const [forms, setForms] = useState<FormSummary[] | null>(null);
+  const [refreshCount, setRefreshCount] = useState(0);
   const [isCreating, setIsCreating] = useState(false);
   const [formToDelete, setFormToDelete] = useState<FormSummary | null>(null);
 
-  const loadForms = useCallback(async () => {
-    try {
-      setForms(await api.listForms());
-    } catch (error) {
-      setForms([]);
-      toast(errorMessage(error), "error");
-    }
-  }, [toast]);
-
   useEffect(() => {
-    // Fetching on mount is the intended use of an effect here
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadForms();
-  }, [loadForms]);
+    api
+      .listForms()
+      .then(setForms)
+      .catch((error) => toast(errorMessage(error), "error"));
+  }, [refreshCount, toast]);
 
   async function runAndReload(action: () => Promise<unknown>, successMessage: string) {
     try {
       await action();
       toast(successMessage);
-      await loadForms();
+      setRefreshCount((count) => count + 1);
     } catch (error) {
       toast(errorMessage(error), "error");
     }
@@ -71,40 +63,36 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-paper text-ink">
-      <header className="flex h-14 items-center justify-between border-b border-line px-6">
-        <span className="text-lg font-bold">Typeform Clone</span>
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand text-sm font-medium text-white">
-          D
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-5xl px-6 py-10">
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-ink">My workspace</h1>
-            <ThemeToggle />
-          </div>
+    <div className="min-h-screen bg-surface text-ink">
+      <header className="flex h-14 items-center justify-between bg-chrome px-6 text-white">
+        <span className="text-lg font-bold tracking-tight">Typeform Clone</span>
+        <div className="flex items-center gap-2">
+          <ThemeToggle className="rounded p-2 text-white/80 hover:bg-white/10 hover:text-white" />
           <button
             onClick={createForm}
             disabled={isCreating}
-            className="rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+            className="rounded-md bg-white px-4 py-1.5 text-sm font-semibold text-[#262627] hover:bg-white/90 disabled:opacity-60"
           >
             {isCreating ? "Creating..." : "+ Create typeform"}
           </button>
         </div>
+      </header>
 
-        {forms === null && <p className="text-muted">Loading your forms...</p>}
+      <main className="mx-auto max-w-4xl px-6 py-10">
+        <h1 className="text-2xl font-bold">My workspace</h1>
+        <p className="mb-6 mt-1 text-sm text-muted">
+          {forms === null ? "Loading your forms..." : `${forms.length} forms`}
+        </p>
 
         {forms !== null && forms.length === 0 && (
-          <div className="rounded-lg border border-dashed border-line py-16 text-center">
-            <p className="mb-1 text-lg font-semibold text-ink">No forms yet</p>
+          <div className="rounded-lg border border-dashed border-line bg-paper py-16 text-center">
+            <p className="mb-1 text-lg font-semibold">No forms yet</p>
             <p className="text-muted">Click &quot;Create typeform&quot; to build your first one.</p>
           </div>
         )}
 
         {forms !== null && forms.length > 0 && (
-          <ul className="divide-y divide-line rounded-lg border border-line">
+          <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-paper">
             {forms.map((form) => (
               <FormRow
                 key={form.id}
@@ -112,12 +100,8 @@ export default function DashboardPage() {
                 onRename={(title) =>
                   runAndReload(() => api.updateForm(form.id, { title }), "Form renamed")
                 }
-                onDuplicate={() =>
-                  runAndReload(() => api.duplicateForm(form.id), "Form duplicated")
-                }
-                onPublish={() =>
-                  runAndReload(() => api.publishForm(form.id), "Form published")
-                }
+                onDuplicate={() => runAndReload(() => api.duplicateForm(form.id), "Form duplicated")}
+                onPublish={() => runAndReload(() => api.publishForm(form.id), "Form published")}
                 onUnpublish={() =>
                   runAndReload(() => api.unpublishForm(form.id), "Form unpublished")
                 }

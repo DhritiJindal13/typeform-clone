@@ -1,5 +1,8 @@
+"use client";
+
 import { getQuestionType } from "@/lib/questionTypes";
 import type { Question, QuestionChanges, QuestionOption } from "@/lib/types";
+import QuestionTypeIcon from "@/components/QuestionTypeIcon";
 
 interface QuestionSettingsProps {
   question: Question | undefined;
@@ -7,102 +10,101 @@ interface QuestionSettingsProps {
   onSave: (changes: QuestionChanges) => void;
 }
 
-interface SettingsFieldsProps {
-  question: Question;
-  onChange: (changes: Partial<Question>) => void;
-  onSave: (changes: QuestionChanges) => void;
-}
+const RATING_SIZES = [3, 4, 5, 7, 10];
 
-const panelClass = "w-80 shrink-0 overflow-y-auto border-l border-line bg-paper p-5";
-const fieldClass =
-  "w-full rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none";
+const panelClass = "w-80 shrink-0 overflow-y-auto border-l border-line bg-paper";
 const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted";
+const fieldClass =
+  "w-full rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-brand";
 
-const CHOICE_TYPES = ["multiple_choice", "dropdown"];
-const RATING_SIZES = [3, 4, 5, 6, 7, 8, 9, 10];
-
-function renumber(options: QuestionOption[]): QuestionOption[] {
-  return options.map((option, index) => ({ ...option, position: index }));
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="border-b border-line px-5 py-4">
+      <span className={labelClass}>{label}</span>
+      {children}
+    </div>
+  );
 }
 
-function SettingsFields({ question, onChange, onSave }: SettingsFieldsProps) {
-  const isChoice = CHOICE_TYPES.includes(question.type);
+export default function QuestionSettings({ question, onChange, onSave }: QuestionSettingsProps) {
+  if (!question) {
+    return (
+      <aside className={panelClass}>
+        <p className="p-5 text-sm text-muted">Select a question to edit its settings.</p>
+      </aside>
+    );
+  }
+
+  const hasChoices = question.type === "multiple_choice" || question.type === "dropdown";
   const ratingSize = question.settings?.max ?? 5;
 
-  function saveTitle() {
-    const title = question.title.trim() || "Untitled question";
-    onChange({ title });
-    onSave({ title });
+  function saveOptions(options: QuestionOption[]) {
+    onSave({ options: options.map((option) => option.label.trim()) });
   }
 
-  function toggleRequired() {
-    const required = !question.required;
-    onChange({ required });
-    onSave({ required });
-  }
-
-  function changeOptionLabel(index: number, label: string) {
+  function changeLabel(index: number, label: string) {
     onChange({
-      options: question.options.map((option, i) => (i === index ? { ...option, label } : option)),
+      options: question!.options.map((option, i) => (i === index ? { ...option, label } : option)),
     });
   }
 
-  function saveOptions(options: QuestionOption[]) {
-    onSave({ options: options.map((option) => option.label) });
-  }
-
   function addOption() {
-    const newOption = {
-      id: -Date.now(),
-      label: `Option ${question.options.length + 1}`,
-      position: 0,
-    };
-    const options = renumber([...question.options, newOption]);
+    const position = question!.options.length;
+    const options = [
+      ...question!.options,
+      { id: -Date.now(), label: `Option ${position + 1}`, position },
+    ];
     onChange({ options });
     saveOptions(options);
   }
 
   function removeOption(index: number) {
-    const options = renumber(question.options.filter((_, i) => i !== index));
+    const options = question!.options.filter((_, i) => i !== index);
     onChange({ options });
     saveOptions(options);
   }
 
-  function changeRatingSize(size: number) {
-    onChange({ settings: { max: size } });
-    onSave({ settings: { max: size } });
+  function changeRatingSize(max: number) {
+    onChange({ settings: { max } });
+    onSave({ settings: { max } });
+  }
+
+  function toggleRequired() {
+    onChange({ required: !question!.required });
+    onSave({ required: !question!.required });
   }
 
   return (
     <aside className={panelClass}>
-      <p className="mb-5 text-sm font-semibold text-ink">{getQuestionType(question.type).label}</p>
-
-      <div className="mb-5">
-        <label className={labelClass}>Question</label>
-        <textarea
-          rows={2}
-          value={question.title}
-          maxLength={500}
-          onChange={(event) => onChange({ title: event.target.value })}
-          onBlur={saveTitle}
-          className={fieldClass}
-        />
+      <div className="flex items-center gap-3 border-b border-line px-5 py-4">
+        <QuestionTypeIcon type={question.type} />
+        <h2 className="text-sm font-semibold text-ink">{getQuestionType(question.type).label}</h2>
       </div>
 
-      <div className="mb-5">
-        <label className={labelClass}>Description</label>
+      <Section label="Question">
         <textarea
+          value={question.title}
           rows={2}
+          maxLength={300}
+          onChange={(event) => onChange({ title: event.target.value })}
+          onBlur={() => onSave({ title: question.title.trim() })}
+          className={`${fieldClass} resize-none`}
+        />
+      </Section>
+
+      <Section label="Description">
+        <textarea
           value={question.description ?? ""}
-          maxLength={2000}
+          rows={2}
+          maxLength={500}
           placeholder="Add a short help text"
           onChange={(event) => onChange({ description: event.target.value })}
-          onBlur={() => onSave({ description: question.description ?? "" })}
-          className={fieldClass}
+          onBlur={() => onSave({ description: (question.description ?? "").trim() })}
+          className={`${fieldClass} resize-none`}
         />
-      </div>
+      </Section>
 
-      <div className="mb-5 flex items-center justify-between">
+      <div className="flex items-center justify-between border-b border-line px-5 py-4">
         <span className="text-sm font-medium text-ink">Required</span>
         <button
           role="switch"
@@ -113,23 +115,22 @@ function SettingsFields({ question, onChange, onSave }: SettingsFieldsProps) {
           }`}
         >
           <span
-            className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-paper shadow transition-transform ${
-              question.required ? "translate-x-5" : "translate-x-0"
+            className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+              question.required ? "translate-x-5" : ""
             }`}
           />
         </button>
       </div>
 
-      {isChoice && (
-        <div className="mb-5">
-          <label className={labelClass}>Choices</label>
+      {hasChoices && (
+        <Section label="Choices">
           <ul className="flex flex-col gap-2">
             {question.options.map((option, index) => (
-              <li key={index} className="flex items-center gap-2">
+              <li key={option.id} className="flex items-center gap-2">
                 <input
                   value={option.label}
                   maxLength={300}
-                  onChange={(event) => changeOptionLabel(index, event.target.value)}
+                  onChange={(event) => changeLabel(index, event.target.value)}
                   onBlur={() => saveOptions(question.options)}
                   className={fieldClass}
                 />
@@ -137,25 +138,24 @@ function SettingsFields({ question, onChange, onSave }: SettingsFieldsProps) {
                   aria-label="Remove choice"
                   disabled={question.options.length <= 1}
                   onClick={() => removeOption(index)}
-                  className="rounded px-2 py-1 text-muted hover:bg-surface disabled:opacity-30"
+                  className="rounded p-1.5 text-muted hover:bg-surface hover:text-danger disabled:opacity-30"
                 >
-                  x
+                  &times;
                 </button>
               </li>
             ))}
           </ul>
           <button
             onClick={addOption}
-            className="mt-2 text-sm font-medium text-brand hover:underline"
+            className="mt-3 text-sm font-semibold text-brand hover:underline"
           >
             + Add choice
           </button>
-        </div>
+        </Section>
       )}
 
       {question.type === "rating" && (
-        <div className="mb-5">
-          <label className={labelClass}>Number of stars</label>
+        <Section label="Number of stars">
           <select
             value={ratingSize}
             onChange={(event) => changeRatingSize(Number(event.target.value))}
@@ -167,20 +167,8 @@ function SettingsFields({ question, onChange, onSave }: SettingsFieldsProps) {
               </option>
             ))}
           </select>
-        </div>
+        </Section>
       )}
     </aside>
   );
-}
-
-export default function QuestionSettings({ question, onChange, onSave }: QuestionSettingsProps) {
-  if (!question) {
-    return (
-      <aside className={panelClass}>
-        <p className="text-sm text-muted">Select a question to edit its settings.</p>
-      </aside>
-    );
-  }
-
-  return <SettingsFields question={question} onChange={onChange} onSave={onSave} />;
 }

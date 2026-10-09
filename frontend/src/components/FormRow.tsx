@@ -28,43 +28,47 @@ export default function FormRow({
 }: FormRowProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
-  const [newTitle, setNewTitle] = useState(form.title);
-
+  const [title, setTitle] = useState(form.title);
   const isPublished = form.status === "published";
   const responseLabel = form.response_count === 1 ? "response" : "responses";
 
   function startRename() {
     setMenuOpen(false);
-    setNewTitle(form.title);
+    setTitle(form.title);
     setIsRenaming(true);
   }
 
-  function saveRename() {
-    const title = newTitle.trim();
+  function finishRename() {
+    const trimmed = title.trim();
     setIsRenaming(false);
-    if (title && title !== form.title) onRename(title);
+    if (trimmed && trimmed !== form.title) onRename(trimmed);
   }
 
-  function chooseFromMenu(action: () => void) {
+  function choose(action: () => void) {
     setMenuOpen(false);
     action();
   }
 
   return (
     <li className="flex items-center gap-4 px-5 py-4 hover:bg-surface">
+      <span
+        className={`h-2.5 w-2.5 shrink-0 rounded-full ${isPublished ? "bg-success" : "bg-line"}`}
+        title={isPublished ? "Published" : "Draft"}
+      />
+
       <div className="min-w-0 flex-1">
         {isRenaming ? (
           <input
             autoFocus
-            value={newTitle}
+            value={title}
             maxLength={200}
-            onChange={(event) => setNewTitle(event.target.value)}
-            onBlur={() => setIsRenaming(false)}
+            onChange={(event) => setTitle(event.target.value)}
+            onBlur={finishRename}
             onKeyDown={(event) => {
-              if (event.key === "Enter") saveRename();
+              if (event.key === "Enter") event.currentTarget.blur();
               if (event.key === "Escape") setIsRenaming(false);
             }}
-            className="w-full rounded border border-brand bg-paper px-2 py-1 text-base font-medium text-ink outline-none"
+            className="w-full rounded border border-brand bg-paper px-2 py-1 text-base font-semibold text-ink outline-none"
           />
         ) : (
           <Link
@@ -74,16 +78,10 @@ export default function FormRow({
             {form.title}
           </Link>
         )}
-        <p className="mt-0.5 text-sm text-muted">Updated {timeAgo(form.updated_at)}</p>
+        <p className="mt-0.5 text-sm text-muted">
+          {isPublished ? "Published" : "Draft"} &middot; Updated {timeAgo(form.updated_at)}
+        </p>
       </div>
-
-      <span
-        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-          isPublished ? "bg-success-soft text-success" : "bg-surface text-muted"
-        }`}
-      >
-        {isPublished ? "Published" : "Draft"}
-      </span>
 
       <Link
         href={`/forms/${form.id}/results`}
@@ -98,7 +96,7 @@ export default function FormRow({
           onClick={() => setMenuOpen(!menuOpen)}
           className="rounded px-2 py-1 text-xl leading-none text-muted hover:bg-line"
         >
-          ...
+          &hellip;
         </button>
 
         {menuOpen && (
@@ -114,27 +112,21 @@ export default function FormRow({
               <button className={menuItemClass} onClick={startRename}>
                 Rename
               </button>
-              <button className={menuItemClass} onClick={() => chooseFromMenu(onDuplicate)}>
+              <button className={menuItemClass} onClick={() => choose(onDuplicate)}>
                 Duplicate
               </button>
               {isPublished && (
-                <button className={menuItemClass} onClick={() => chooseFromMenu(onCopyLink)}>
+                <button className={menuItemClass} onClick={() => choose(onCopyLink)}>
                   Copy link
                 </button>
               )}
-              {isPublished ? (
-                <button className={menuItemClass} onClick={() => chooseFromMenu(onUnpublish)}>
-                  Unpublish
-                </button>
-              ) : (
-                <button className={menuItemClass} onClick={() => chooseFromMenu(onPublish)}>
-                  Publish
-                </button>
-              )}
               <button
-                className={`${menuItemClass} text-danger`}
-                onClick={() => chooseFromMenu(onDelete)}
+                className={menuItemClass}
+                onClick={() => choose(isPublished ? onUnpublish : onPublish)}
               >
+                {isPublished ? "Unpublish" : "Publish"}
+              </button>
+              <button className={`${menuItemClass} text-danger`} onClick={() => choose(onDelete)}>
                 Delete
               </button>
             </div>
