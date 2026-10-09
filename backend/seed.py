@@ -7,7 +7,7 @@ from database import Base, SessionLocal, engine
 from models import Answer, Form, FormStatus, Question, QuestionOption, Response, utcnow
 from routers.forms import get_default_user
 
-random.seed(7)  # same fake data every time
+random.seed(7)
 
 NAMES = [
     "Aarav", "Diya", "Kabir", "Meera", "Rohan", "Ananya", "Vikram", "Isha",
@@ -98,13 +98,12 @@ def create_form(db, owner, slug, title, thank_you, question_specs, response_coun
             )
         )
     db.add(form)
-    db.flush()  # gives the questions their ids
+    db.flush()
 
     for i in range(response_count):
         name = NAMES[i % len(NAMES)]
         answers = []
         for question in form.questions:
-            # Optional questions are sometimes skipped, like real people do
             if not question.required and random.random() < 0.3:
                 continue
             answers.append(Answer(question_id=question.id, value=fake_answer(question, name)))
@@ -125,7 +124,7 @@ def main():
                     "You're registered! See you at the event.", EVENT_QUESTIONS, 12)
         db.commit()
     except Exception:
-        db.rollback()  # if anything fails, save nothing half-done
+        db.rollback()
         raise
     finally:
         db.close()

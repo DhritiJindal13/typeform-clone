@@ -13,8 +13,6 @@ function subscribe(listener: () => void) {
   };
 }
 
-// The inline script in layout.tsx sets data-theme before React loads,
-// so the <html> attribute is the single source of truth.
 function getSnapshot(): Theme {
   return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
 }
@@ -31,7 +29,6 @@ export function useTheme() {
     try {
       localStorage.setItem("theme", next);
     } catch {
-      // storage can be blocked (private mode); the theme still works for this visit
     }
     listeners.forEach((listener) => listener());
   }, []);

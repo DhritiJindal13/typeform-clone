@@ -1,6 +1,5 @@
 import type { QuestionType } from "@/lib/types";
 
-// Each type gets its own color, like Typeform's question badges.
 const BADGE_COLORS: Record<QuestionType, string> = {
   short_text: "bg-[#e8effb] text-[#0445af]",
   long_text: "bg-[#e8effb] text-[#0445af]",

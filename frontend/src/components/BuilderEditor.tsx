@@ -36,7 +36,6 @@ export default function BuilderEditor() {
       .catch(() => setLoadFailed(true));
   }, [formId]);
 
-  // Escape closes the preview
   useEffect(() => {
     if (!isPreviewing) return;
     function closeOnEscape(event: KeyboardEvent) {
