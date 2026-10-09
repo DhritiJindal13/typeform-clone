@@ -64,7 +64,6 @@ def create_form(body: FormCreate, db: Session = Depends(get_db)):
 @router.get("", response_model=list[FormSummary])
 def list_forms(db: Session = Depends(get_db)):
     user = get_default_user(db)
-    # For each form, count how many responses it has. Newest edited first.
     rows = (
         db.query(Form, func.count(Response.id))
         .outerjoin(Response, Response.form_id == Form.id)
@@ -84,7 +83,6 @@ def get_form(form_id: int, db: Session = Depends(get_db)):
 @router.patch("/{form_id}", response_model=FormDetail)
 def update_form(form_id: int, body: FormUpdate, db: Session = Depends(get_db)):
     form = get_form_or_404(db, form_id)
-    # Only change the fields that were actually sent
     for field, value in body.model_dump(exclude_unset=True).items():
         if value is not None:
             setattr(form, field, value)
@@ -96,7 +94,7 @@ def update_form(form_id: int, body: FormUpdate, db: Session = Depends(get_db)):
 @router.delete("/{form_id}", status_code=204)
 def delete_form(form_id: int, db: Session = Depends(get_db)):
     form = get_form_or_404(db, form_id)
-    db.delete(form)  # questions, options and responses are deleted with it
+    db.delete(form)
     db.commit()
 
 
@@ -109,7 +107,6 @@ def duplicate_form(form_id: int, db: Session = Depends(get_db)):
         slug=make_unique_slug(db),
         thank_you_message=original.thank_you_message,
     )
-    # Copy every question, with its choices. Responses are NOT copied.
     for q in original.questions:
         copy.questions.append(
             Question(
