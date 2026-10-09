@@ -24,7 +24,6 @@ def get_published_form_or_404(db: Session, slug: str) -> Form:
 
 
 def check_answer(question: Question, value: str) -> str | None:
-    """Returns an error message if the answer is wrong, or None if it's fine."""
     kind = question.type
 
     if kind == "short_text" and len(value) > MAX_SHORT_TEXT:
@@ -71,9 +70,15 @@ def submit_response(slug: str, body: ResponseCreate, db: Session = Depends(get_d
     submitted: dict[int, str] = {}
     for answer in body.answers:
         if answer.question_id not in questions_by_id:
-            raise HTTPException(status_code=400, detail="An answer belongs to a question that is not in this form")
+            raise HTTPException(
+                status_code=400,
+                detail="An answer belongs to a question that is not in this form",
+            )
         if answer.question_id in submitted:
-            raise HTTPException(status_code=400, detail="The same question was answered twice")
+            raise HTTPException(
+                status_code=400,
+                detail="The same question was answered twice",
+            )
         submitted[answer.question_id] = answer.value.strip()
 
     errors: dict[str, str] = {}
@@ -89,7 +94,7 @@ def submit_response(slug: str, body: ResponseCreate, db: Session = Depends(get_d
 
     if errors:
         return JSONResponse(
-            status_code=422,
+            status_code=400,
             content={"detail": "Please fix the highlighted answers", "errors": errors},
         )
 
