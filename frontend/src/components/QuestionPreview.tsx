@@ -1,8 +1,13 @@
-import type { Question } from "@/lib/types";
+"use client";
+
+import { useEffect, useRef } from "react";
+import type { Question, QuestionChanges } from "@/lib/types";
 
 interface QuestionPreviewProps {
   question: Question;
   number: number;
+  onChange: (changes: Partial<Question>) => void;
+  onSave: (changes: QuestionChanges) => void;
 }
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -12,6 +17,47 @@ const choiceClass =
   "flex items-center gap-3 rounded border border-brand/60 bg-brand-soft px-3 py-2 text-brand";
 const keyClass =
   "flex h-6 w-6 items-center justify-center rounded border border-brand/60 bg-white text-xs font-semibold";
+
+interface AutoTextareaProps {
+  value: string;
+  placeholder: string;
+  className: string;
+  maxLength: number;
+  onChange: (value: string) => void;
+  onBlur: () => void;
+}
+
+// A text box that grows with its content and looks like plain text until you click it.
+// Enter finishes editing instead of adding a new line.
+function AutoTextarea({ value, placeholder, className, maxLength, onChange, onBlur }: AutoTextareaProps) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    element.style.height = "auto";
+    element.style.height = `${element.scrollHeight}px`;
+  }, [value]);
+
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      value={value}
+      maxLength={maxLength}
+      placeholder={placeholder}
+      onChange={(event) => onChange(event.target.value)}
+      onBlur={onBlur}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          event.currentTarget.blur();
+        }
+      }}
+      className={`block w-full resize-none overflow-hidden rounded bg-transparent outline-none placeholder:text-muted/50 hover:bg-surface focus:bg-transparent ${className}`}
+    />
+  );
+}
 
 function AnswerArea({ question }: { question: Question }) {
   if (question.type === "short_text") {
@@ -81,20 +127,35 @@ function AnswerArea({ question }: { question: Question }) {
   );
 }
 
-export default function QuestionPreview({ question, number }: QuestionPreviewProps) {
+export default function QuestionPreview({ question, number, onChange, onSave }: QuestionPreviewProps) {
   return (
     <div className="flex w-full max-w-3xl flex-col gap-8 rounded-lg bg-white px-14 py-16 shadow-sm">
       <div>
-        <h2 className="flex items-start gap-3 text-3xl font-medium text-ink">
-          <span className="mt-1.5 shrink-0 text-lg text-brand">{number} &rarr;</span>
-          <span>
-            {question.title || "Untitled question"}
-            {question.required && <span className="ml-1 text-brand">*</span>}
-          </span>
-        </h2>
-        {question.description && (
-          <p className="mt-3 pl-12 text-lg text-muted">{question.description}</p>
-        )}
+        <div className="flex items-start gap-3">
+          <span className="mt-2 shrink-0 text-lg text-brand">{number} &rarr;</span>
+          <div className="min-w-0 flex-1">
+            <AutoTextarea
+              value={question.title}
+              placeholder="Your question here"
+              maxLength={300}
+              className="text-3xl font-medium text-ink"
+              onChange={(title) => onChange({ title })}
+              onBlur={() => onSave({ title: question.title.trim() })}
+            />
+          </div>
+          {question.required && <span className="mt-1 text-3xl text-brand">*</span>}
+        </div>
+
+        <div className="mt-3 pl-12">
+          <AutoTextarea
+            value={question.description ?? ""}
+            placeholder="Description (optional)"
+            maxLength={500}
+            className="text-lg text-muted"
+            onChange={(description) => onChange({ description })}
+            onBlur={() => onSave({ description: (question.description ?? "").trim() })}
+          />
+        </div>
       </div>
 
       <div className="pl-12">
@@ -103,7 +164,11 @@ export default function QuestionPreview({ question, number }: QuestionPreviewPro
 
       <div className="flex items-center gap-3 pl-12">
         <span className="rounded bg-brand px-5 py-2 text-lg font-semibold text-white">OK</span>
-        <span className="text-xs text-muted">press Enter</span>
+        <span className="text-xs text-muted">
+          {question.type === "long_text"
+            ? "Shift \u21E7 + Enter \u21B5 to make a line break"
+            : "press Enter \u21B5"}
+        </span>
       </div>
     </div>
   );

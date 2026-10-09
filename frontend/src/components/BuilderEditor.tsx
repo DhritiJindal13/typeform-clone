@@ -11,6 +11,8 @@ import QuestionList from "@/components/QuestionList";
 import QuestionPreview from "@/components/QuestionPreview";
 import QuestionSettings from "@/components/QuestionSettings";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import FormFiller from "@/components/respond/FormFiller";
+import SettingsModal from "@/components/SettingsModal";
 
 export default function BuilderEditor() {
   const params = useParams<{ id: string }>();
@@ -21,6 +23,8 @@ export default function BuilderEditor() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [questionToDelete, setQuestionToDelete] = useState<Question | null>(null);
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     api
@@ -32,9 +36,28 @@ export default function BuilderEditor() {
       .catch(() => setLoadFailed(true));
   }, [formId]);
 
+  // Escape closes the preview
+  useEffect(() => {
+    if (!isPreviewing) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsPreviewing(false);
+    }
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [isPreviewing]);
+
   async function renameForm(title: string) {
     try {
       setForm(await api.updateForm(formId, { title }));
+    } catch (error) {
+      toast(errorMessage(error), "error");
+    }
+  }
+
+  async function saveThankYou(message: string) {
+    try {
+      setForm(await api.updateForm(formId, { thank_you_message: message }));
+      toast("Settings saved");
     } catch (error) {
       toast(errorMessage(error), "error");
     }
@@ -176,13 +199,36 @@ export default function BuilderEditor() {
           onReorder={reorderQuestions}
         />
 
-        <main className="flex flex-1 items-center justify-center overflow-y-auto bg-surface p-8">
-          {selectedQuestion ? (
-            <QuestionPreview question={selectedQuestion} number={selectedIndex + 1} />
-          ) : (
-            <p className="text-muted">Add a question to get started</p>
-          )}
-        </main>
+        <div className="flex min-w-0 flex-1 flex-col bg-surface">
+          <div className="flex justify-end gap-2 border-b border-line bg-white px-4 py-2">
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="rounded-md bg-surface px-4 py-1.5 text-sm font-semibold hover:bg-line"
+            >
+              Settings
+            </button>
+            <button
+              onClick={() => setIsPreviewing(true)}
+              disabled={form.questions.length === 0}
+              className="rounded-md bg-surface px-4 py-1.5 text-sm font-semibold hover:bg-line disabled:opacity-40"
+            >
+              Preview
+            </button>
+          </div>
+
+          <main className="flex flex-1 items-center justify-center overflow-y-auto p-8">
+            {selectedQuestion ? (
+              <QuestionPreview
+                question={selectedQuestion}
+                number={selectedIndex + 1}
+                onChange={(changes) => changeQuestion(selectedQuestion.id, changes)}
+                onSave={(changes) => saveQuestion(selectedQuestion.id, changes)}
+              />
+            ) : (
+              <p className="text-muted">Add a question to get started</p>
+            )}
+          </main>
+        </div>
 
         <QuestionSettings
           question={selectedQuestion}
@@ -190,6 +236,36 @@ export default function BuilderEditor() {
           onSave={(changes) => selectedQuestion && saveQuestion(selectedQuestion.id, changes)}
         />
       </div>
+
+      {isSettingsOpen && (
+        <SettingsModal
+          thankYouMessage={form.thank_you_message}
+          onSave={saveThankYou}
+          onClose={() => setIsSettingsOpen(false)}
+        />
+      )}
+
+      {isPreviewing && (
+        <div className="fixed inset-0 z-50 bg-white">
+          <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between bg-ink px-4 py-2 text-sm text-white">
+            <span>Preview mode: answers are not saved</span>
+            <button
+              onClick={() => setIsPreviewing(false)}
+              className="rounded bg-white/15 px-3 py-1 font-semibold hover:bg-white/25"
+            >
+              Close preview
+            </button>
+          </div>
+          <FormFiller
+            preview={{
+              title: form.title,
+              slug: form.slug,
+              thank_you_message: form.thank_you_message,
+              questions: form.questions,
+            }}
+          />
+        </div>
+      )}
 
       {questionToDelete && (
         <ConfirmDialog

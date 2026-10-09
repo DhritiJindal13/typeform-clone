@@ -11,6 +11,10 @@ interface BuilderHeaderProps {
   onCopyLink: () => void;
 }
 
+const tabBase = "flex h-full items-center border-b-2 px-4 text-sm font-medium transition-colors";
+const tabIdle = `${tabBase} border-transparent text-white/70 hover:text-white`;
+const tabActive = `${tabBase} border-white text-white`;
+
 export default function BuilderHeader({
   form,
   onRename,
@@ -30,10 +34,14 @@ export default function BuilderHeader({
   }
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-line bg-white px-4">
-      <div className="flex items-center gap-3">
-        <Link href="/" className="rounded px-2 py-1 text-sm font-medium text-muted hover:bg-surface">
-          &larr; Back
+    <header className="grid h-14 shrink-0 grid-cols-[1fr_auto_1fr] items-center bg-ink px-4 text-white">
+      <div className="flex min-w-0 items-center gap-2">
+        <Link
+          href="/"
+          aria-label="Back to workspace"
+          className="rounded px-2 py-1 text-lg text-white/80 hover:bg-white/10 hover:text-white"
+        >
+          &larr;
         </Link>
         <input
           value={title}
@@ -43,32 +51,39 @@ export default function BuilderHeader({
           onKeyDown={(event) => {
             if (event.key === "Enter") event.currentTarget.blur();
           }}
-          className="w-72 rounded border border-transparent px-2 py-1 text-base font-semibold text-ink hover:border-line focus:border-brand focus:outline-none"
+          className="w-56 min-w-0 rounded bg-transparent px-2 py-1 text-base font-semibold text-white outline-none hover:bg-white/10 focus:bg-white/10"
         />
         <span
-          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-            isPublished ? "bg-success-soft text-success" : "bg-surface text-muted"
+          className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+            isPublished ? "bg-success-soft text-success" : "bg-white/15 text-white/80"
           }`}
         >
           {isPublished ? "Published" : "Draft"}
         </span>
       </div>
 
-      <div className="flex items-center gap-2">
-        {isPublished && (
-          <button
-            onClick={onCopyLink}
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface"
-          >
-            Copy link
-          </button>
-        )}
+      <nav className="flex h-full items-stretch">
+        <span className={tabActive}>Create</span>
+        <button
+          onClick={onCopyLink}
+          disabled={!isPublished}
+          title={isPublished ? "Copy the public link" : "Publish the form to share it"}
+          className={`${tabIdle} disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-white/70`}
+        >
+          Share
+        </button>
+        <Link href={`/forms/${form.id}/results`} className={tabIdle}>
+          Results
+        </Link>
+      </nav>
+
+      <div className="flex items-center justify-end">
         <button
           onClick={onTogglePublish}
           className={`rounded-md px-4 py-1.5 text-sm font-semibold ${
             isPublished
-              ? "bg-surface text-ink hover:bg-line"
-              : "bg-brand text-white hover:bg-brand-dark"
+              ? "bg-white/15 text-white hover:bg-white/25"
+              : "bg-white text-ink hover:bg-white/90"
           }`}
         >
           {isPublished ? "Unpublish" : "Publish"}

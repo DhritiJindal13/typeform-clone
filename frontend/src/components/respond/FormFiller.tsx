@@ -14,11 +14,16 @@ import ThankYouScreen from "./ThankYouScreen";
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const AUTO_ADVANCE_DELAY = 300;
 
-export default function FormFiller({ slug }: { slug: string }) {
+interface FormFillerProps {
+  slug?: string;
+  preview?: PublicForm; // builder preview: uses this form and never submits
+}
+
+export default function FormFiller({ slug, preview }: FormFillerProps) {
   const toast = useToast();
   const isSending = useRef(false);
 
-  const [form, setForm] = useState<PublicForm | null>(null);
+  const [loadedForm, setLoadedForm] = useState<PublicForm | null>(null);
   const [notAvailable, setNotAvailable] = useState(false);
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
@@ -28,11 +33,14 @@ export default function FormFiller({ slug }: { slug: string }) {
   const [thankYouMessage, setThankYouMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!slug) return;
     api
       .getPublicForm(slug)
-      .then(setForm)
+      .then(setLoadedForm)
       .catch(() => setNotAvailable(true));
   }, [slug]);
+
+  const form = preview ?? loadedForm;
 
   const questions = form?.questions ?? [];
   const question = questions[index];
@@ -62,7 +70,11 @@ export default function FormFiller({ slug }: { slug: string }) {
   }
 
   async function submit(finalAnswers: Record<number, string>) {
-    if (isSending.current) return;
+    if (preview) {
+      setThankYouMessage(preview.thank_you_message);
+      return;
+    }
+    if (!slug || isSending.current) return;
     isSending.current = true;
     setIsSubmitting(true);
 
@@ -124,6 +136,8 @@ export default function FormFiller({ slug }: { slug: string }) {
       const tag = (event.target as HTMLElement).tagName;
       const isTyping = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 
+      // Enter moves on everywhere. In long text, Shift+Enter is left alone so the
+      // textarea inserts a line break (as in Typeform).
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
         goNext();

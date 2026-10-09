@@ -16,8 +16,9 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { QUESTION_TYPES, getQuestionType } from "@/lib/questionTypes";
+import { QUESTION_TYPES } from "@/lib/questionTypes";
 import type { Question, QuestionType } from "@/lib/types";
+import QuestionTypeIcon from "@/components/QuestionTypeIcon";
 
 interface QuestionRowProps {
   question: Question;
@@ -27,8 +28,23 @@ interface QuestionRowProps {
   onDelete: () => void;
 }
 
-const iconClass =
-  "flex h-6 w-9 shrink-0 items-center justify-center rounded bg-white text-xs font-bold text-brand ring-1 ring-brand/20";
+function TrashIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="14"
+      height="14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9h6.6l.7-9M6.5 7v4M9.5 7v4" />
+    </svg>
+  );
+}
 
 function QuestionRow({ question, number, isSelected, onSelect, onDelete }: QuestionRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -46,24 +62,24 @@ function QuestionRow({ question, number, isSelected, onSelect, onDelete }: Quest
       style={style}
       {...attributes}
       {...listeners}
-      className={`group flex items-center rounded-md ${
-        isSelected ? "bg-brand-soft" : "hover:bg-surface"
+      className={`group mb-1 flex cursor-grab items-center rounded-md border-l-[3px] active:cursor-grabbing ${
+        isSelected ? "border-brand bg-brand-soft" : "border-transparent hover:bg-surface"
       } ${isDragging ? "relative z-10 bg-white shadow-lg" : ""}`}
     >
       <button
         onClick={onSelect}
         className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left"
       >
-        <span className="w-5 shrink-0 text-sm font-semibold text-muted">{number}</span>
-        <span className={iconClass}>{getQuestionType(question.type).icon}</span>
+        <span className="w-4 shrink-0 text-sm font-semibold text-muted">{number}</span>
+        <QuestionTypeIcon type={question.type} />
         <span className="truncate text-sm text-ink">{question.title || "Untitled question"}</span>
       </button>
       <button
         aria-label="Delete question"
         onClick={onDelete}
-        className="mr-2 hidden rounded px-2 py-1 text-sm text-muted hover:bg-line group-hover:block"
+        className="mr-2 hidden rounded p-1.5 text-muted hover:bg-line hover:text-danger group-hover:block"
       >
-        x
+        <TrashIcon />
       </button>
     </li>
   );
@@ -110,22 +126,25 @@ export default function QuestionList({
       <div className="relative border-b border-line p-3">
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="w-full rounded-md bg-brand py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-brand bg-white py-2 text-sm font-semibold text-brand hover:bg-brand-soft"
         >
-          + Add question
+          <span className="text-lg leading-none">+</span> Add question
         </button>
 
         {menuOpen && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
             <div className="absolute left-3 right-3 top-full z-20 mt-1 rounded-md border border-line bg-white py-1 shadow-lg">
+              <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted">
+                Question types
+              </p>
               {QUESTION_TYPES.map((item) => (
                 <button
                   key={item.type}
                   onClick={() => addQuestion(item.type)}
                   className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-ink hover:bg-surface"
                 >
-                  <span className={iconClass}>{item.icon}</span>
+                  <QuestionTypeIcon type={item.type} />
                   {item.label}
                 </button>
               ))}

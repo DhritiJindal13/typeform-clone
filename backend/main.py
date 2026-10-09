@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -10,10 +12,13 @@ app = FastAPI(title="Typeform Clone API")
 # Creates any tables that don't exist yet.
 Base.metadata.create_all(bind=engine)
 
-# Lets our frontend (port 3000) talk to this backend (port 8000).
+# Comma-separated list, e.g. ALLOWED_ORIGINS=https://my-app.vercel.app
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+
+# Lets our frontend talk to this backend.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
