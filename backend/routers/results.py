@@ -1,6 +1,9 @@
+import csv
+import io
 from collections import Counter, defaultdict
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
 
@@ -154,3 +157,44 @@ def get_summary(form_id: int, db: Session = Depends(get_db)):
             summarise_question(q, values_by_question[q.id], total) for q in form.questions
         ],
     }
+
+
+FORMULA_PREFIXES = ("=", "+", "-", "@")
+
+
+def csv_safe(value: str, question_type: str) -> str:
+    if question_type != "number" and value.startswith(FORMULA_PREFIXES):
+        return "'" + value
+    return value
+
+
+@router.get("/api/forms/{form_id}/responses/export")
+def export_responses(form_id: int, db: Session = Depends(get_db)):
+    form = get_form_or_404(db, form_id)
+    responses = (
+        db.query(Response)
+        .options(selectinload(Response.answers))
+        .filter(Response.form_id == form.id)
+        .order_by(Response.submitted_at, Response.id)
+        .all()
+    )
+
+    buffer = io.StringIO()
+    buffer.write("\ufeff")
+    writer = csv.writer(buffer)
+    writer.writerow(
+        ["Response ID", "Submitted at (UTC)"] + [csv_safe(q.title, "text") for q in form.questions]
+    )
+    for response in responses:
+        given = {a.question_id: a.value for a in response.answers}
+        writer.writerow(
+            [response.id, response.submitted_at.isoformat(sep=" ", timespec="seconds")]
+            + [csv_safe(given.get(q.id, ""), q.type) for q in form.questions]
+        )
+
+    filename = f"{form.slug}-responses.csv"
+    return StreamingResponse(
+        iter([buffer.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

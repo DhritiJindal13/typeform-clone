@@ -62,6 +62,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 const toJson = (body: unknown) => JSON.stringify(body);
 
 export const api = {
+  exportUrl: (formId: number) => `${BASE_URL}/api/forms/${formId}/responses/export`,
+
   listForms: () => request<FormSummary[]>("/api/forms"),
 
   getForm: (id: number) => request<FormDetail>(`/api/forms/${id}`),

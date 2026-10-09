@@ -8,6 +8,7 @@ import type { FormDetail, ResponseList, ResultsSummary } from "@/lib/types";
 import { useToast } from "@/components/Toast";
 import PageLoading from "@/components/PageLoading";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import ThemeToggle from "@/components/ThemeToggle";
 import SummaryCard from "./SummaryCard";
 import ResponsesTable from "./ResponsesTable";
 import ResponsePanel from "./ResponsePanel";
@@ -83,31 +84,49 @@ export default function ResultsView() {
 
   return (
     <div className="min-h-screen bg-paper text-ink">
-      <header className="border-b border-line px-6 pt-4">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="rounded px-2 py-1 text-sm font-medium text-muted hover:bg-surface">
-              &larr; Back
-            </Link>
-            <h1 className="text-lg font-semibold">{form.title}</h1>
-          </div>
+      <header className="grid h-14 grid-cols-[1fr_auto_1fr] items-center bg-chrome px-4 text-white">
+        <div className="flex min-w-0 items-center gap-2">
           <Link
-            href={`/forms/${form.id}/edit`}
-            className="rounded-md bg-surface px-4 py-1.5 text-sm font-semibold hover:bg-line"
+            href="/"
+            aria-label="Back to workspace"
+            className="rounded px-2 py-1 text-lg text-white/80 hover:bg-white/10 hover:text-white"
           >
-            Edit form
+            &larr;
           </Link>
+          <h1 className="truncate text-base font-semibold">{form.title}</h1>
         </div>
 
-        <div className="flex gap-6">
-          <button className={tabClass("summary")} onClick={() => setTab("summary")}>
-            Summary
-          </button>
-          <button className={tabClass("responses")} onClick={() => setTab("responses")}>
-            Responses ({responses.total})
-          </button>
+        <nav className="flex h-full items-stretch">
+          <Link
+            href={`/forms/${form.id}/edit`}
+            className="flex h-full items-center border-b-2 border-transparent px-4 text-sm font-medium text-white/70 hover:text-white"
+          >
+            Create
+          </Link>
+          <span className="flex h-full items-center border-b-2 border-white px-4 text-sm font-medium text-white">
+            Results
+          </span>
+        </nav>
+
+        <div className="flex items-center justify-end gap-2">
+          <ThemeToggle className="rounded p-2 text-white/80 hover:bg-white/10 hover:text-white" />
+          <a
+            href={api.exportUrl(form.id)}
+            className="rounded-md bg-white/15 px-4 py-1.5 text-sm font-semibold text-white hover:bg-white/25"
+          >
+            Export CSV
+          </a>
         </div>
       </header>
+
+      <div className="flex gap-6 border-b border-line px-6 pt-3">
+        <button className={tabClass("summary")} onClick={() => setTab("summary")}>
+          Summary
+        </button>
+        <button className={tabClass("responses")} onClick={() => setTab("responses")}>
+          Responses ({responses.total})
+        </button>
+      </div>
 
       <main className="mx-auto max-w-5xl px-6 py-8">
         {responses.total === 0 ? (
