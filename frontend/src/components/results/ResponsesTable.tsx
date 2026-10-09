@@ -9,7 +9,7 @@ interface ResponsesTableProps {
 
 export default function ResponsesTable({ questions, responses, onOpen }: ResponsesTableProps) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-line bg-white">
+    <div className="overflow-x-auto rounded-lg border border-line bg-paper">
       <table className="w-full text-left text-sm">
         <thead className="border-b border-line bg-surface text-xs uppercase tracking-wide text-muted">
           <tr>

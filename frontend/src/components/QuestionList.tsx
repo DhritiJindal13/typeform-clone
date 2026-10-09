@@ -64,7 +64,7 @@ function QuestionRow({ question, number, isSelected, onSelect, onDelete }: Quest
       {...listeners}
       className={`group mb-1 flex cursor-grab items-center rounded-md border-l-[3px] active:cursor-grabbing ${
         isSelected ? "border-brand bg-brand-soft" : "border-transparent hover:bg-surface"
-      } ${isDragging ? "relative z-10 bg-white shadow-lg" : ""}`}
+      } ${isDragging ? "relative z-10 bg-paper shadow-lg" : ""}`}
     >
       <button
         onClick={onSelect}
@@ -122,11 +122,11 @@ export default function QuestionList({
   }
 
   return (
-    <aside className="flex w-72 shrink-0 flex-col border-r border-line bg-white">
+    <aside className="flex w-72 shrink-0 flex-col border-r border-line bg-paper">
       <div className="relative border-b border-line p-3">
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-brand bg-white py-2 text-sm font-semibold text-brand hover:bg-brand-soft"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-brand bg-paper py-2 text-sm font-semibold text-brand hover:bg-brand-soft"
         >
           <span className="text-lg leading-none">+</span> Add question
         </button>
@@ -134,7 +134,7 @@ export default function QuestionList({
         {menuOpen && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-            <div className="absolute left-3 right-3 top-full z-20 mt-1 rounded-md border border-line bg-white py-1 shadow-lg">
+            <div className="absolute left-3 right-3 top-full z-20 mt-1 rounded-md border border-line bg-paper py-1 shadow-lg">
               <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted">
                 Question types
               </p>

@@ -13,9 +13,9 @@ interface SettingsFieldsProps {
   onSave: (changes: QuestionChanges) => void;
 }
 
-const panelClass = "w-80 shrink-0 overflow-y-auto border-l border-line bg-white p-5";
+const panelClass = "w-80 shrink-0 overflow-y-auto border-l border-line bg-paper p-5";
 const fieldClass =
-  "w-full rounded-md border border-line bg-white px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none";
+  "w-full rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none";
 const labelClass = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted";
 
 const CHOICE_TYPES = ["multiple_choice", "dropdown"];
@@ -113,7 +113,7 @@ function SettingsFields({ question, onChange, onSave }: SettingsFieldsProps) {
           }`}
         >
           <span
-            className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+            className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-paper shadow transition-transform ${
               question.required ? "translate-x-5" : "translate-x-0"
             }`}
           />

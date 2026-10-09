@@ -183,7 +183,7 @@ export default function FormFiller({ slug, preview }: FormFillerProps) {
 
   if (notAvailable || (form && questions.length === 0)) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-white text-ink">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-paper text-ink">
         <p className="text-xl font-semibold">This form is not available.</p>
         <p className="text-muted">It may have been unpublished or the link is wrong.</p>
         <Link href="/" className="text-brand hover:underline">
@@ -200,7 +200,7 @@ export default function FormFiller({ slug, preview }: FormFillerProps) {
   const percent = Math.round((index / questions.length) * 100);
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-white text-ink">
+    <div className="flex h-screen flex-col overflow-hidden bg-paper text-ink">
       <main className="flex flex-1 items-center overflow-y-auto px-6">
         <div className="mx-auto w-full max-w-3xl py-10">
           <QuestionScreen

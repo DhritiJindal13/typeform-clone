@@ -24,8 +24,8 @@ function ChoiceButton({ keyLabel, label, selected, onClick }: ChoiceButtonProps)
     ? "border-brand bg-brand text-white"
     : "border-brand/60 bg-brand-soft text-brand hover:bg-brand/10";
   const keyColors = selected
-    ? "border-white bg-white text-brand"
-    : "border-brand/60 bg-white text-brand";
+    ? "border-white bg-paper text-brand"
+    : "border-brand/60 bg-paper text-brand";
 
   return (
     <button

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { FormDetail } from "@/lib/types";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface BuilderHeaderProps {
   form: FormDetail;
@@ -34,7 +35,7 @@ export default function BuilderHeader({
   }
 
   return (
-    <header className="grid h-14 shrink-0 grid-cols-[1fr_auto_1fr] items-center bg-ink px-4 text-white">
+    <header className="grid h-14 shrink-0 grid-cols-[1fr_auto_1fr] items-center bg-chrome px-4 text-white">
       <div className="flex min-w-0 items-center gap-2">
         <Link
           href="/"
@@ -77,13 +78,14 @@ export default function BuilderHeader({
         </Link>
       </nav>
 
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end gap-2">
+        <ThemeToggle className="rounded p-2 text-white/80 hover:bg-white/10 hover:text-white" />
         <button
           onClick={onTogglePublish}
           className={`rounded-md px-4 py-1.5 text-sm font-semibold ${
             isPublished
               ? "bg-white/15 text-white hover:bg-white/25"
-              : "bg-white text-ink hover:bg-white/90"
+              : "bg-[#ffffff] text-[#262627] hover:bg-white/90"
           }`}
         >
           {isPublished ? "Unpublish" : "Publish"}

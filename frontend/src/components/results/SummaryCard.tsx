@@ -84,7 +84,7 @@ function SummaryBody({ summary }: { summary: QuestionSummary }) {
 
 export default function SummaryCard({ summary, number }: { summary: QuestionSummary; number: number }) {
   return (
-    <section className="rounded-lg border border-line bg-white p-6">
+    <section className="rounded-lg border border-line bg-paper p-6">
       <h3 className="text-base font-semibold text-ink">
         <span className="text-brand">{number}.</span> {summary.title}
       </h3>

@@ -1,5 +1,7 @@
 "use client";
 
+import ThemeToggle from "@/components/ThemeToggle";
+
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, errorMessage } from "@/lib/api";
@@ -69,7 +71,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-ink">
+    <div className="min-h-screen bg-paper text-ink">
       <header className="flex h-14 items-center justify-between border-b border-line px-6">
         <span className="text-lg font-bold">Typeform Clone</span>
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand text-sm font-medium text-white">
@@ -79,7 +81,10 @@ export default function DashboardPage() {
 
       <main className="mx-auto max-w-5xl px-6 py-10">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-ink">My workspace</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-ink">My workspace</h1>
+            <ThemeToggle />
+          </div>
           <button
             onClick={createForm}
             disabled={isCreating}

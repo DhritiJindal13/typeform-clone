@@ -181,7 +181,7 @@ export default function BuilderEditor() {
   const selectedQuestion = selectedIndex >= 0 ? form.questions[selectedIndex] : undefined;
 
   return (
-    <div className="flex h-screen flex-col bg-white text-ink">
+    <div className="flex h-screen flex-col bg-paper text-ink">
       <BuilderHeader
         form={form}
         onRename={renameForm}
@@ -200,7 +200,7 @@ export default function BuilderEditor() {
         />
 
         <div className="flex min-w-0 flex-1 flex-col bg-surface">
-          <div className="flex justify-end gap-2 border-b border-line bg-white px-4 py-2">
+          <div className="flex justify-end gap-2 border-b border-line bg-paper px-4 py-2">
             <button
               onClick={() => setIsSettingsOpen(true)}
               className="rounded-md bg-surface px-4 py-1.5 text-sm font-semibold hover:bg-line"
@@ -246,8 +246,8 @@ export default function BuilderEditor() {
       )}
 
       {isPreviewing && (
-        <div className="fixed inset-0 z-50 bg-white">
-          <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between bg-ink px-4 py-2 text-sm text-white">
+        <div className="fixed inset-0 z-50 bg-paper">
+          <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between bg-chrome px-4 py-2 text-sm text-white">
             <span>Preview mode: answers are not saved</span>
             <button
               onClick={() => setIsPreviewing(false)}

@@ -38,7 +38,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             key={toast.id}
             role="status"
             className={`rounded-md px-4 py-2.5 text-sm font-medium text-white shadow-lg ${
-              toast.kind === "error" ? "bg-danger" : "bg-ink"
+              toast.kind === "error" ? "bg-danger" : "bg-chrome"
             }`}
           >
             {toast.message}

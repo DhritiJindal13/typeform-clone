@@ -64,7 +64,7 @@ export default function FormRow({
               if (event.key === "Enter") saveRename();
               if (event.key === "Escape") setIsRenaming(false);
             }}
-            className="w-full rounded border border-brand bg-white px-2 py-1 text-base font-medium text-ink outline-none"
+            className="w-full rounded border border-brand bg-paper px-2 py-1 text-base font-medium text-ink outline-none"
           />
         ) : (
           <Link
@@ -104,7 +104,7 @@ export default function FormRow({
         {menuOpen && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-            <div className="absolute right-0 z-20 mt-1 w-48 overflow-hidden rounded-md border border-line bg-white py-1 shadow-lg">
+            <div className="absolute right-0 z-20 mt-1 w-48 overflow-hidden rounded-md border border-line bg-paper py-1 shadow-lg">
               <Link href={`/forms/${form.id}/edit`} className={menuItemClass}>
                 Edit
               </Link>

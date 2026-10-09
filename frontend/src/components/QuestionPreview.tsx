@@ -16,7 +16,7 @@ const lineAnswerClass = "border-b-2 border-brand/40 pb-2 text-2xl text-brand/50"
 const choiceClass =
   "flex items-center gap-3 rounded border border-brand/60 bg-brand-soft px-3 py-2 text-brand";
 const keyClass =
-  "flex h-6 w-6 items-center justify-center rounded border border-brand/60 bg-white text-xs font-semibold";
+  "flex h-6 w-6 items-center justify-center rounded border border-brand/60 bg-paper text-xs font-semibold";
 
 interface AutoTextareaProps {
   value: string;
@@ -129,7 +129,7 @@ function AnswerArea({ question }: { question: Question }) {
 
 export default function QuestionPreview({ question, number, onChange, onSave }: QuestionPreviewProps) {
   return (
-    <div className="flex w-full max-w-3xl flex-col gap-8 rounded-lg bg-white px-14 py-16 shadow-sm">
+    <div className="flex w-full max-w-3xl flex-col gap-8 rounded-lg bg-paper px-14 py-16 shadow-sm">
       <div>
         <div className="flex items-start gap-3">
           <span className="mt-2 shrink-0 text-lg text-brand">{number} &rarr;</span>

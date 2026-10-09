@@ -82,7 +82,7 @@ export default function ResultsView() {
     }`;
 
   return (
-    <div className="min-h-screen bg-white text-ink">
+    <div className="min-h-screen bg-paper text-ink">
       <header className="border-b border-line px-6 pt-4">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">

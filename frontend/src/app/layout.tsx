@@ -7,9 +7,16 @@ export const metadata: Metadata = {
   description: "Build forms and collect answers, one question at a time.",
 };
 
+// Runs before the page paints. Uses the saved choice, otherwise light.
+// (To follow the OS setting by default, use matchMedia("(prefers-color-scheme: dark)").)
+const themeScript = `(function(){try{var t=localStorage.getItem("theme");document.documentElement.dataset.theme=t==="dark"?"dark":"light"}catch(e){document.documentElement.dataset.theme="light"}})()`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
         <ToastProvider>{children}</ToastProvider>
       </body>
