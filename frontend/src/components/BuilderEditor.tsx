@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { api, errorMessage } from "@/lib/api";
-import type { FormDetail, Question, QuestionType } from "@/lib/types";
+import type { FormDetail, Question, QuestionChanges, QuestionType } from "@/lib/types";
 import { useToast } from "@/components/Toast";
 import BuilderHeader from "@/components/BuilderHeader";
 import QuestionList from "@/components/QuestionList";
+import QuestionPreview from "@/components/QuestionPreview";
+import QuestionSettings from "@/components/QuestionSettings";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 export default function BuilderEditor() {
@@ -75,6 +77,48 @@ export default function BuilderEditor() {
     }
   }
 
+  function changeQuestion(id: number, changes: Partial<Question>) {
+    setForm((current) =>
+      current
+        ? {
+            ...current,
+            questions: current.questions.map((question) =>
+              question.id === id ? { ...question, ...changes } : question
+            ),
+          }
+        : current
+    );
+  }
+
+  async function saveQuestion(id: number, changes: QuestionChanges) {
+    try {
+      await api.updateQuestion(id, changes);
+    } catch (error) {
+      toast(errorMessage(error), "error");
+      const freshForm = await api.getForm(formId).catch(() => null);
+      if (freshForm) setForm(freshForm);
+    }
+  }
+
+  async function reorderQuestions(questionIds: number[]) {
+    setForm((current) => {
+      if (!current) return current;
+      const reordered = questionIds
+        .map((id) => current.questions.find((question) => question.id === id))
+        .filter((question): question is Question => question !== undefined)
+        .map((question, position) => ({ ...question, position }));
+      return { ...current, questions: reordered };
+    });
+
+    try {
+      await api.reorderQuestions(formId, questionIds);
+    } catch (error) {
+      toast(errorMessage(error), "error");
+      const freshForm = await api.getForm(formId).catch(() => null);
+      if (freshForm) setForm(freshForm);
+    }
+  }
+
   async function deleteSelectedQuestion() {
     if (!form || !questionToDelete) return;
     const deletedId = questionToDelete.id;
@@ -105,10 +149,13 @@ export default function BuilderEditor() {
   }
 
   if (!form) {
-    return <div className="flex min-h-screen items-center justify-center text-muted">Loading...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center text-muted">Loading...</div>
+    );
   }
 
-  const selectedQuestion = form.questions.find((question) => question.id === selectedId);
+  const selectedIndex = form.questions.findIndex((question) => question.id === selectedId);
+  const selectedQuestion = selectedIndex >= 0 ? form.questions[selectedIndex] : undefined;
 
   return (
     <div className="flex h-screen flex-col bg-white text-ink">
@@ -126,13 +173,22 @@ export default function BuilderEditor() {
           onSelect={setSelectedId}
           onAdd={addQuestion}
           onDelete={setQuestionToDelete}
+          onReorder={reorderQuestions}
         />
 
-        <main className="flex flex-1 items-center justify-center bg-surface">
-          <p className="text-muted">
-            {selectedQuestion ? selectedQuestion.title : "Add a question to get started"}
-          </p>
+        <main className="flex flex-1 items-center justify-center overflow-y-auto bg-surface p-8">
+          {selectedQuestion ? (
+            <QuestionPreview question={selectedQuestion} number={selectedIndex + 1} />
+          ) : (
+            <p className="text-muted">Add a question to get started</p>
+          )}
         </main>
+
+        <QuestionSettings
+          question={selectedQuestion}
+          onChange={(changes) => selectedQuestion && changeQuestion(selectedQuestion.id, changes)}
+          onSave={(changes) => selectedQuestion && saveQuestion(selectedQuestion.id, changes)}
+        />
       </div>
 
       {questionToDelete && (

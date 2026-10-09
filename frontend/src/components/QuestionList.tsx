@@ -1,8 +1,73 @@
 "use client";
 
 import { useState } from "react";
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { QUESTION_TYPES, getQuestionType } from "@/lib/questionTypes";
 import type { Question, QuestionType } from "@/lib/types";
+
+interface QuestionRowProps {
+  question: Question;
+  number: number;
+  isSelected: boolean;
+  onSelect: () => void;
+  onDelete: () => void;
+}
+
+const iconClass =
+  "flex h-6 w-9 shrink-0 items-center justify-center rounded bg-white text-xs font-bold text-brand ring-1 ring-brand/20";
+
+function QuestionRow({ question, number, isSelected, onSelect, onDelete }: QuestionRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: question.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`group flex items-center rounded-md ${
+        isSelected ? "bg-brand-soft" : "hover:bg-surface"
+      } ${isDragging ? "relative z-10 bg-white shadow-lg" : ""}`}
+    >
+      <button
+        onClick={onSelect}
+        className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left"
+      >
+        <span className="w-5 shrink-0 text-sm font-semibold text-muted">{number}</span>
+        <span className={iconClass}>{getQuestionType(question.type).icon}</span>
+        <span className="truncate text-sm text-ink">{question.title || "Untitled question"}</span>
+      </button>
+      <button
+        aria-label="Delete question"
+        onClick={onDelete}
+        className="mr-2 hidden rounded px-2 py-1 text-sm text-muted hover:bg-line group-hover:block"
+      >
+        x
+      </button>
+    </li>
+  );
+}
 
 interface QuestionListProps {
   questions: Question[];
@@ -10,6 +75,7 @@ interface QuestionListProps {
   onSelect: (id: number) => void;
   onAdd: (type: QuestionType) => void;
   onDelete: (question: Question) => void;
+  onReorder: (questionIds: number[]) => void;
 }
 
 export default function QuestionList({
@@ -18,12 +84,25 @@ export default function QuestionList({
   onSelect,
   onAdd,
   onDelete,
+  onReorder,
 }: QuestionListProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   function addQuestion(type: QuestionType) {
     setMenuOpen(false);
     onAdd(type);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = questions.findIndex((question) => question.id === active.id);
+    const newIndex = questions.findIndex((question) => question.id === over.id);
+    const reordered = arrayMove(questions, oldIndex, newIndex);
+    onReorder(reordered.map((question) => question.id));
   }
 
   return (
@@ -46,9 +125,7 @@ export default function QuestionList({
                   onClick={() => addQuestion(item.type)}
                   className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-ink hover:bg-surface"
                 >
-                  <span className="flex h-6 w-9 items-center justify-center rounded bg-brand-soft text-xs font-bold text-brand">
-                    {item.icon}
-                  </span>
+                  <span className={iconClass}>{item.icon}</span>
                   {item.label}
                 </button>
               ))}
@@ -57,42 +134,33 @@ export default function QuestionList({
         )}
       </div>
 
-      <ul className="flex-1 overflow-y-auto p-2">
+      <div className="flex-1 overflow-y-auto p-2">
         {questions.length === 0 && (
-          <li className="px-3 py-6 text-center text-sm text-muted">
+          <p className="px-3 py-6 text-center text-sm text-muted">
             No questions yet. Add your first one above.
-          </li>
+          </p>
         )}
 
-        {questions.map((question, index) => (
-          <li
-            key={question.id}
-            className={`group flex items-center rounded-md ${
-              question.id === selectedId ? "bg-brand-soft" : "hover:bg-surface"
-            }`}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext
+            items={questions.map((question) => question.id)}
+            strategy={verticalListSortingStrategy}
           >
-            <button
-              onClick={() => onSelect(question.id)}
-              className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left"
-            >
-              <span className="w-5 text-sm font-semibold text-muted">{index + 1}</span>
-              <span className="flex h-6 w-9 shrink-0 items-center justify-center rounded bg-brand-soft text-xs font-bold text-brand">
-                {getQuestionType(question.type).icon}
-              </span>
-              <span className="truncate text-sm text-ink">
-                {question.title || "Untitled question"}
-              </span>
-            </button>
-            <button
-              aria-label="Delete question"
-              onClick={() => onDelete(question)}
-              className="mr-2 hidden rounded px-2 py-1 text-sm text-muted hover:bg-line group-hover:block"
-            >
-              x
-            </button>
-          </li>
-        ))}
-      </ul>
+            <ul>
+              {questions.map((question, index) => (
+                <QuestionRow
+                  key={question.id}
+                  question={question}
+                  number={index + 1}
+                  isSelected={question.id === selectedId}
+                  onSelect={() => onSelect(question.id)}
+                  onDelete={() => onDelete(question)}
+                />
+              ))}
+            </ul>
+          </SortableContext>
+        </DndContext>
+      </div>
     </aside>
   );
 }
