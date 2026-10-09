@@ -26,6 +26,8 @@ export default function DashboardPage() {
   }, [toast]);
 
   useEffect(() => {
+    // Fetching on mount is the intended use of an effect here
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadForms();
   }, [loadForms]);
 
@@ -92,7 +94,7 @@ export default function DashboardPage() {
         {forms !== null && forms.length === 0 && (
           <div className="rounded-lg border border-dashed border-line py-16 text-center">
             <p className="mb-1 text-lg font-semibold text-ink">No forms yet</p>
-            <p className="text-muted">Click "Create typeform" to build your first one.</p>
+            <p className="text-muted">Click &quot;Create typeform&quot; to build your first one.</p>
           </div>
         )}
 

@@ -23,3 +23,33 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+@keyframes slide-in-from-below {
+  from {
+    opacity: 0;
+    transform: translateY(56px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-from-above {
+  from {
+    opacity: 0;
+    transform: translateY(-56px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.screen-forward {
+  animation: slide-in-from-below 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.screen-back {
+  animation: slide-in-from-above 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
