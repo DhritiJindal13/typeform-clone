@@ -69,16 +69,26 @@ function SummaryBody({ summary }: { summary: QuestionSummary }) {
         </div>
       );
 
-    default:
+    default: {
+      const shown = summary.recent?.length ?? 0;
       return (
-        <ul className="flex flex-col gap-2">
-          {summary.recent?.map((text, index) => (
-            <li key={index} className="rounded bg-surface px-3 py-2 text-sm text-ink">
-              {text}
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="flex flex-col gap-2">
+            {summary.recent?.map((text, index) => (
+              <li key={index} className="rounded bg-surface px-3 py-2 text-sm text-ink">
+                {text}
+              </li>
+            ))}
+          </ul>
+          {summary.answered > shown && (
+            <p className="mt-3 text-sm text-muted">
+              Showing the latest {shown} of {summary.answered} answers. Open the Responses tab to
+              see all of them.
+            </p>
+          )}
+        </>
       );
+    }
   }
 }
 
