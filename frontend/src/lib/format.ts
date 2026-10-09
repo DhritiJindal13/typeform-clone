@@ -1,5 +1,3 @@
-// The backend sends times without a timezone label (they are UTC).
-// Without adding "Z", the browser would read them as local time.
 function toDate(value: string): Date {
   const hasZone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(value);
   return new Date(hasZone ? value : `${value}Z`);

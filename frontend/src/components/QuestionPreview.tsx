@@ -27,8 +27,6 @@ interface AutoTextareaProps {
   onBlur: () => void;
 }
 
-// A text box that grows with its content and looks like plain text until you click it.
-// Enter finishes editing instead of adding a new line.
 function AutoTextarea({ value, placeholder, className, maxLength, onChange, onBlur }: AutoTextareaProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
 

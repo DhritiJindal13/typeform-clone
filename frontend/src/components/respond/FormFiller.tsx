@@ -16,7 +16,7 @@ const AUTO_ADVANCE_DELAY = 300;
 
 interface FormFillerProps {
   slug?: string;
-  preview?: PublicForm; // builder preview: uses this form and never submits
+  preview?: PublicForm;
 }
 
 export default function FormFiller({ slug, preview }: FormFillerProps) {
@@ -136,8 +136,6 @@ export default function FormFiller({ slug, preview }: FormFillerProps) {
       const tag = (event.target as HTMLElement).tagName;
       const isTyping = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 
-      // Enter moves on everywhere. In long text, Shift+Enter is left alone so the
-      // textarea inserts a line break (as in Typeform).
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
         goNext();

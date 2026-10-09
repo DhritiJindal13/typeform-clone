@@ -44,8 +44,6 @@ export default function ResultsView() {
   }, [formId]);
 
   useEffect(() => {
-    // Fetching on mount is the intended use of an effect here
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAll();
   }, [loadAll]);
 

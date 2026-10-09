@@ -64,7 +64,6 @@ def create_question(form_id: int, body: QuestionCreate, db: Session = Depends(ge
             raise HTTPException(status_code=400, detail="Only choice questions can have choices")
         labels = []
 
-    # New question goes to the end of the list
     last_position = db.query(func.max(Question.position)).filter(Question.form_id == form.id).scalar()
     next_position = 0 if last_position is None else last_position + 1
 
@@ -88,19 +87,18 @@ def create_question(form_id: int, body: QuestionCreate, db: Session = Depends(ge
 @router.patch("/api/questions/{question_id}", response_model=QuestionOut)
 def update_question(question_id: int, body: QuestionUpdate, db: Session = Depends(get_db)):
     question = get_question_or_404(db, question_id)
-    data = body.model_dump(exclude_unset=True)  # only the things that were sent
+    data = body.model_dump(exclude_unset=True)
 
     if data.get("title") is not None:
         question.title = data["title"]
     if "description" in data:
-        question.description = data["description"] or None  # empty text clears it
+        question.description = data["description"] or None
     if data.get("required") is not None:
         question.required = data["required"]
     if data.get("options") is not None:
         if question.type not in CHOICE_TYPES:
             raise HTTPException(status_code=400, detail="Only choice questions can have choices")
         labels = clean_options(data["options"])
-        # Replace the old choices with the new list
         question.options = [QuestionOption(label=label, position=i) for i, label in enumerate(labels)]
     if "settings" in data:
         question.settings = clean_settings(question.type, data["settings"])
@@ -118,7 +116,6 @@ def delete_question(question_id: int, db: Session = Depends(get_db)):
     db.delete(question)
     db.flush()
 
-    # Close the gap: renumber the remaining questions 0, 1, 2...
     remaining = (
         db.query(Question)
         .filter(Question.form_id == form.id)
@@ -128,7 +125,6 @@ def delete_question(question_id: int, db: Session = Depends(get_db)):
     for index, q in enumerate(remaining):
         q.position = index
 
-    # A published form with no questions would be a blank page, so unpublish it
     if not remaining and form.status == FormStatus.PUBLISHED.value:
         form.status = FormStatus.DRAFT.value
 
@@ -142,7 +138,6 @@ def reorder_questions(form_id: int, body: QuestionOrder, db: Session = Depends(g
     questions = db.query(Question).filter(Question.form_id == form.id).all()
     by_id = {q.id: q for q in questions}
 
-    # The list must contain every question of this form, exactly once
     if len(body.question_ids) != len(set(body.question_ids)) or set(body.question_ids) != set(by_id):
         raise HTTPException(
             status_code=400,

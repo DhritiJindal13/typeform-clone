@@ -26,8 +26,8 @@ def get_form_or_404(db: Session, form_id: int) -> Form:
 @router.get("/api/forms/{form_id}/responses", response_model=ResponseListOut)
 def list_responses(
     form_id: int,
-    limit: int = Query(default=100, ge=1, le=500),  # how many to return
-    offset: int = Query(default=0, ge=0),  # how many to skip (for page 2, 3...)
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ):
     form = get_form_or_404(db, form_id)
@@ -35,7 +35,7 @@ def list_responses(
 
     rows = (
         db.query(Response)
-        .options(selectinload(Response.answers))  # fetch all answers in one go
+        .options(selectinload(Response.answers))
         .filter(Response.form_id == form.id)
         .order_by(Response.submitted_at.desc(), Response.id.desc())
         .offset(offset)
@@ -62,7 +62,6 @@ def get_response(response_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Response not found")
 
     given = {a.question_id: a.value for a in response.answers}
-    # Walk through the form's questions in order, so skipped ones still appear
     return ResponseDetail(
         id=response.id,
         form_id=response.form_id,
@@ -101,7 +100,6 @@ def summarise_question(question: Question, values: list[str], total: int) -> dic
     if question.type in ("multiple_choice", "dropdown"):
         counts = Counter(values)
         choices = [{"label": o.label, "count": counts.pop(o.label, 0)} for o in question.options]
-        # Answers for choices that were renamed or removed later still get counted
         choices += [{"label": label, "count": count} for label, count in counts.items()]
         summary["choices"] = choices
 
@@ -122,12 +120,12 @@ def summarise_question(question: Question, values: list[str], total: int) -> dic
             try:
                 numbers.append(float(v))
             except ValueError:
-                pass  # ignore anything that is not a number
+                pass
         summary["average"] = round(sum(numbers) / len(numbers), 2) if numbers else None
         summary["min"] = min(numbers) if numbers else None
         summary["max"] = max(numbers) if numbers else None
 
-    else:  # short_text, long_text, email
+    else:
         summary["recent"] = list(reversed(values[-RECENT_TEXT_ANSWERS:]))
 
     return summary
@@ -138,7 +136,6 @@ def get_summary(form_id: int, db: Session = Depends(get_db)):
     form = get_form_or_404(db, form_id)
     total = db.query(func.count(Response.id)).filter(Response.form_id == form.id).scalar()
 
-    # One query for all answers of this form, then group them by question
     rows = (
         db.query(Answer.question_id, Answer.value)
         .join(Response, Answer.response_id == Response.id)
