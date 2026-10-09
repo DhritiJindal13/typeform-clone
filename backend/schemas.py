@@ -24,7 +24,6 @@ class QuestionOut(BaseModel):
 
 
 class FormCreate(BaseModel):
-    # strip spaces first, so a title of only spaces counts as empty and is rejected
     model_config = ConfigDict(str_strip_whitespace=True)
     title: str = Field(default="Untitled form", min_length=1, max_length=200)
 
@@ -75,7 +74,7 @@ class QuestionCreate(BaseModel):
     title: str = Field(default="", max_length=500)
     description: Optional[str] = Field(default=None, max_length=2000)
     required: bool = False
-    options: Optional[list[str]] = None  # just the choice texts
+    options: Optional[list[str]] = None
     settings: Optional[dict] = None
 
 
@@ -131,7 +130,7 @@ class AnswerDetail(BaseModel):
     question_id: int
     title: str
     type: str
-    value: Optional[str]  # empty when the person skipped it
+    value: Optional[str]
 
 
 class ResponseDetail(BaseModel):

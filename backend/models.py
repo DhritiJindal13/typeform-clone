@@ -78,7 +78,6 @@ class Question(Base):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     required: Mapped[bool] = mapped_column(Boolean, default=False)
     position: Mapped[int] = mapped_column(Integer)
-    # Type-specific extras, e.g. {"max": 5} for rating questions
     settings: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
     form: Mapped["Form"] = relationship(back_populates="questions")
