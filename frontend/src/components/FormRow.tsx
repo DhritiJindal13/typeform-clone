@@ -102,7 +102,7 @@ export default function FormRow({
         {menuOpen && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-            <div className="absolute right-0 z-20 mt-1 w-48 overflow-hidden rounded-md border border-line bg-paper py-1 shadow-lg">
+            <div className="absolute right-0 z-20 mt-1 w-48 rounded-md border border-line bg-paper py-1 shadow-lg">
               <Link href={`/forms/${form.id}/edit`} className={menuItemClass}>
                 Edit
               </Link>
