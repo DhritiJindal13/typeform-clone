@@ -11,7 +11,6 @@ from schemas import PublicFormOut, ResponseCreate, ResponseCreated
 
 router = APIRouter(prefix="/api/public", tags=["public"])
 
-# Simple email shape check: something@something.something, no spaces
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 MAX_SHORT_TEXT = 500
 MAX_LONG_TEXT = 5000
@@ -19,7 +18,6 @@ MAX_LONG_TEXT = 5000
 
 def get_published_form_or_404(db: Session, slug: str) -> Form:
     form = db.query(Form).filter(Form.slug == slug).first()
-    # Drafts look exactly like "doesn't exist", so nobody can peek at unfinished forms
     if not form or form.status != FormStatus.PUBLISHED.value:
         raise HTTPException(status_code=404, detail="This form is not available")
     return form
@@ -42,7 +40,7 @@ def check_answer(question: Question, value: str) -> str | None:
             number = float(value)
         except ValueError:
             return "Please enter a number"
-        if not math.isfinite(number):  # blocks 'nan' and 'inf'
+        if not math.isfinite(number):
             return "Please enter a number"
 
     if kind == "yes_no" and value not in ("yes", "no"):
@@ -70,7 +68,6 @@ def submit_response(slug: str, body: ResponseCreate, db: Session = Depends(get_d
     form = get_published_form_or_404(db, slug)
     questions_by_id = {q.id: q for q in form.questions}
 
-    # 1. Collect the answers, refusing strange input
     submitted: dict[int, str] = {}
     for answer in body.answers:
         if answer.question_id not in questions_by_id:
@@ -79,26 +76,23 @@ def submit_response(slug: str, body: ResponseCreate, db: Session = Depends(get_d
             raise HTTPException(status_code=400, detail="The same question was answered twice")
         submitted[answer.question_id] = answer.value.strip()
 
-    # 2. Check every question, and gather ALL problems so the user sees them together
     errors: dict[str, str] = {}
     for question in form.questions:
         value = submitted.get(question.id, "")
         if value == "":
             if question.required:
                 errors[str(question.id)] = "This question is required"
-            continue  # optional and blank: skip
+            continue
         message = check_answer(question, value)
         if message:
             errors[str(question.id)] = message
 
     if errors:
-        # Nothing is saved when there are problems
         return JSONResponse(
             status_code=422,
             content={"detail": "Please fix the highlighted answers", "errors": errors},
         )
 
-    # 3. Save the response and its (non-blank) answers in one go
     response = Response(
         form_id=form.id,
         answers=[
