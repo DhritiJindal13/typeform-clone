@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { timeAgo } from "@/lib/format";
 import type { FormSummary } from "@/lib/types";
@@ -16,6 +16,7 @@ interface FormRowProps {
 }
 
 const menuItemClass = "block w-full px-4 py-2 text-left text-sm text-ink hover:bg-surface";
+const MENU_WIDTH = 192;
 
 export default function FormRow({
   form,
@@ -29,6 +30,8 @@ export default function FormRow({
   const [menuOpen, setMenuOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [title, setTitle] = useState(form.title);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, openUp: false });
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const isPublished = form.status === "published";
   const responseLabel = form.response_count === 1 ? "response" : "responses";
 
@@ -48,6 +51,35 @@ export default function FormRow({
     setMenuOpen(false);
     action();
   }
+
+  function openMenu() {
+    if (menuOpen) {
+      setMenuOpen(false);
+      return;
+    }
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const menuHeight = 280;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUp = spaceBelow < menuHeight && rect.top > menuHeight;
+
+    setMenuPos({
+      top: openUp ? rect.top - 4 : rect.bottom + 4,
+      left: Math.min(rect.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - 8),
+      openUp,
+    });
+    setMenuOpen(true);
+  }
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onScroll() {
+      setMenuOpen(false);
+    }
+    window.addEventListener("scroll", onScroll, true);
+    return () => window.removeEventListener("scroll", onScroll, true);
+  }, [menuOpen]);
 
   return (
     <li className="flex items-center gap-4 px-5 py-4 hover:bg-surface">
@@ -92,8 +124,9 @@ export default function FormRow({
 
       <div className="relative">
         <button
+          ref={buttonRef}
           aria-label="More actions"
-          onClick={() => setMenuOpen(!menuOpen)}
+          onClick={openMenu}
           className="rounded px-2 py-1 text-xl leading-none text-muted hover:bg-line"
         >
           &hellip;
@@ -101,8 +134,15 @@ export default function FormRow({
 
         {menuOpen && (
           <>
-            <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-            <div className="absolute right-0 z-20 mt-1 w-48 rounded-md border border-line bg-paper py-1 shadow-lg">
+            <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+            <div
+              className="fixed z-50 w-48 rounded-md border border-line bg-paper py-1 shadow-lg"
+              style={{
+                top: menuPos.top,
+                left: Math.max(8, menuPos.left),
+                transform: menuPos.openUp ? "translateY(-100%)" : undefined,
+              }}
+            >
               <Link href={`/forms/${form.id}/edit`} className={menuItemClass}>
                 Edit
               </Link>
